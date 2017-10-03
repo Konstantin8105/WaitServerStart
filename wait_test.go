@@ -3,26 +3,16 @@ package wait_test
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"testing"
 	"time"
 
-	freePort "github.com/Konstantin8105/FreePort"
 	wait "github.com/Konstantin8105/WaitServerStart"
 )
 
 func TestByAddress(t *testing.T) {
-	port, err := freePort.Get()
-	if err != nil {
-		t.Error(err)
-	}
-
-	address := fmt.Sprintf("http://127.0.0.1:%d", port)
-
+	srv, address := startHttpServer()
 	ch := wait.ByAddress(address)
-
-	srv := startHttpServer(port)
 
 	<-ch
 
@@ -31,17 +21,38 @@ func TestByAddress(t *testing.T) {
 	}
 }
 
-func startHttpServer(port int) *http.Server {
-	srv := &http.Server{Addr: fmt.Sprintf(":%d", port)}
+func startHttpServer() (*http.Server, string) {
+	port := 8090
+	address := fmt.Sprintf("http://127.0.0.1:%d", port)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.WriteString(w, "hello world\n")
-	})
+	srv := &http.Server{Addr: fmt.Sprintf(":%d", port)}
 
 	go func() {
 		time.Sleep(5 * time.Millisecond)
 		_ = srv.ListenAndServe()
 	}()
 
-	return srv
+	return srv, address
+}
+
+func ExampleByAddress() {
+	// Start a server
+	srv, address := startHttpServer()
+
+	// Wait starting of server
+	<-wait.ByAddress(address)
+
+	// Testing
+	resp, err := http.Get(address)
+	if err != nil {
+		fmt.Println("RESPONSE")
+		panic(err)
+	}
+	fmt.Println("Server is run...")
+	_ = resp.Body.Close()
+	if err := srv.Shutdown(context.Background()); err != nil {
+		panic(err)
+	}
+
+	// Output: Server is run...
 }

@@ -8,3 +8,27 @@
 [![GoDoc](https://godoc.org/github.com/Konstantin8105/WaitServerStart?status.svg)](https://godoc.org/github.com/Konstantin8105/WaitServerStart)
 
 Simple waiter of server start
+
+```golang
+func main() {
+	// Start a server
+	srv, address := startHttpServer()
+
+	// Wait starting of server
+	<-wait.ByAddress(address)
+
+	// Testing
+	resp, err := http.Get(address)
+	if err != nil {
+		fmt.Println("RESPONSE")
+		panic(err)
+	}
+	fmt.Println("Server is run...")
+	_ = resp.Body.Close()
+	if err := srv.Shutdown(context.Background()); err != nil {
+		panic(err)
+	}
+
+	// Output: Server is run...
+}
+```
