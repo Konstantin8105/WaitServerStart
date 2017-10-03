@@ -39,7 +39,7 @@ func startHttpServer(port int) *http.Server {
 	})
 
 	go func() {
-		time.Sleep(time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 		_ = srv.ListenAndServe()
 	}()
 
